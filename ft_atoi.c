@@ -6,7 +6,7 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/07 15:34:35 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/08 13:50:16 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/08 19:38:57 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,19 +14,19 @@
 
 unsigned int	ft_unsigned_atoi(const char *str)
 {
-	int	nb;
-	int	row;
-	int	i;
+	unsigned int	nb;
+	unsigned int	row;
+	unsigned int	i;
 
 	nb = 0;
 	row = 0;
 	i = 0;
-	while (str[i])
+	while (str && str[i])
 	{
 		if (str[i] <= '9' && str[i] >= '0')
 		{
-            if (nb > UINT_MAX / 10 || (nb == UINT_MAX / 10 && (str[i] - '0') > UINT_MAX % 10))
-                return (0, error_args("unsigned int overflow"));
+            if (nb > UINT_MAX / 10 || (nb == UINT_MAX / 10 && ((unsigned int)str[i] - '0') > UINT_MAX % 10))
+                return (perror_args("unsigned int overflow"), 0);
 			nb = (str[i] - '0') + (nb * 10);
 			i++;
 			row = 1;
@@ -35,7 +35,7 @@ unsigned int	ft_unsigned_atoi(const char *str)
 				|| str[i] == '+'))
 			i++;
 		else
-			return (0, error_args("not a valid number"));
+			return (perror_args("not a valid number"), 0);
 	}
 	return (nb);
 }
