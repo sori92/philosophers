@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_atoi.c                                          :+:      :+:    :+:   */
+/*   aux.c                                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/04/07 15:34:35 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/08 19:38:57 by dsoriano         ###   ########.fr       */
+/*   Created: 2025/04/10 19:45:18 by dsoriano          #+#    #+#             */
+/*   Updated: 2025/04/10 19:50:21 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,8 +25,9 @@ unsigned int	ft_unsigned_atoi(const char *str)
 	{
 		if (str[i] <= '9' && str[i] >= '0')
 		{
-            if (nb > UINT_MAX / 10 || (nb == UINT_MAX / 10 && ((unsigned int)str[i] - '0') > UINT_MAX % 10))
-                return (perror_args("unsigned int overflow"), 0);
+			if (nb > UINT_MAX / 10 || (nb == UINT_MAX / 10
+					&& ((unsigned int)str[i] - '0') > UINT_MAX % 10))
+				return (perror_args("unsigned int overflow"), 0);
 			nb = (str[i] - '0') + (nb * 10);
 			i++;
 			row = 1;
@@ -38,4 +39,27 @@ unsigned int	ft_unsigned_atoi(const char *str)
 			return (perror_args("not a valid number"), 0);
 	}
 	return (nb);
+}
+
+int	is_even(unsigned int name)
+{
+	if (name % 2 == 0)
+		return (1);
+	return (0);
+}
+
+/*
+	Check the difference between a given moment
+	and the current moment, returning it in milisecs.
+*/
+long	time_dif(struct timeval start_tv)
+{
+	struct timeval	current_tv;
+	unsigned int	start_time;
+	unsigned int	current_time;
+
+	gettimeofday(&current_tv, NULL);
+	start_time = start_tv.tv_sec / 1000 + start_tv.tv_usec * 1000;
+	current_time = current_tv.tv_sec / 1000 + current_tv.tv_usec * 1000;
+	return (current_time - start_time);
 }
