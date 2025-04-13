@@ -6,7 +6,7 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/10 19:45:18 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/10 19:50:21 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/13 20:41:25 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,7 @@ long	time_dif(struct timeval start_tv)
 	unsigned int	current_time;
 
 	gettimeofday(&current_tv, NULL);
-	start_time = start_tv.tv_sec / 1000 + start_tv.tv_usec * 1000;
-	current_time = current_tv.tv_sec / 1000 + current_tv.tv_usec * 1000;
+	start_time = start_tv.tv_sec * 1000 + start_tv.tv_usec / 1000;
+	current_time = current_tv.tv_sec * 1000 + current_tv.tv_usec / 1000;
 	return (current_time - start_time);
 }

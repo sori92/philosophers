@@ -6,7 +6,7 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/10 13:47:42 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/10 19:45:06 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/13 20:52:52 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,13 +37,8 @@ static void	init_philo_vars(t_philo *philo, t_manager manager)
 */
 void	state_printer(const char *color, t_philo *philo, const char *str)
 {
-	struct timeval	current_tv;
-	unsigned int	current_time;
-
-	gettimeofday(&current_tv, NULL);
-	current_time = current_tv.tv_sec / 1000 + current_tv.tv_usec * 1000;
 	pthread_mutex_lock(&philo->manager->printer);
-	printf("%s%d %d %s\x1b[0m\n", color, current_time, philo->name, str);
+	printf("%s%ld %d %s\x1b[0m\n", color, time_dif(philo->start_time), philo->name, str);
 	pthread_mutex_unlock(&philo->manager->printer);
 }
 

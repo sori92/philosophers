@@ -6,7 +6,7 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/07 13:27:29 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/10 20:07:34 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/13 20:41:49 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ static void	parsing(int argc, char **argv, t_manager *manager)
 	Destryoing all the mutex and threads and cleaning allocations,
 	before closing the program.
 */
-static void	clean_philo(t_manager *manager, int nerror, unsigned int i)
+static void	clean_philo(t_manager *manager, t_philo **philo, int nerror, unsigned int i)
 {
 	while (i < manager->n_philos)
 	{
@@ -43,6 +43,7 @@ static void	clean_philo(t_manager *manager, int nerror, unsigned int i)
 		}
 		i++;
 	}
+	free(manager->threads);
 	i = 0;
 	while (i < manager->n_philos)
 	{
@@ -54,9 +55,17 @@ static void	clean_philo(t_manager *manager, int nerror, unsigned int i)
 		}
 		i++;
 	}
+	free(manager->forks);
 	nerror = pthread_mutex_destroy(&manager->printer);
 	if (nerror)
 		perror_destroy(nerror, "destroy mutex error in printer");
+	i = 0;
+	while (i < manager->n_philos)
+    {
+		free(philo[i]);
+		i++;
+    }
+	free(philo);
 }
 
 /*
@@ -67,12 +76,12 @@ static void	clean_philo(t_manager *manager, int nerror, unsigned int i)
 */
 static void	parca_loop(t_manager *manager, t_philo **philo)
 {
-	int	i;
+	unsigned int	i;
 
 	while (manager->dead == 0)
 	{
 		i = 0;
-		while (philo[i])
+		while (i < manager->n_philos)
 		{
 			if (time_dif(philo[i]->last_lunch) > manager->time_die)
 			{
@@ -85,6 +94,12 @@ static void	parca_loop(t_manager *manager, t_philo **philo)
 	}
 }
 
+/*
+    Initiating some basic main values:
+    - Allocation of space for 'philo**', 'threads*' and 'forks*'.
+	- Creation of a 'mutex' for the prints.
+	- Setting the 'dead' to 0.
+*/
 static void	init_main_vars(t_manager *manager, t_philo ***philo, int nerror)
 {
 	*philo = malloc(sizeof(t_philo *) * manager->n_philos);
@@ -129,11 +144,13 @@ int	main(int argc, char **argv)
 			perror_alloc_create(0, "allocation issue in pthread_t *philo");
 		philo[i]->name = i + 1;
 		philo[i]->manager = &manager;
-		pthread_create(&manager.threads[i], NULL, &thread_loop, philo[i]);
+		nerror = pthread_create(&manager.threads[i], NULL, &thread_loop, philo[i]);
+		if (nerror)
+			perror_alloc_create(nerror, "thread creation error");
 		i++;
 	}
 	sleep(1);
 	parca_loop(&manager, philo);
-	clean_philo(&manager, 0, 0);
+	clean_philo(&manager, philo, 0, 0);
 	exit(0);
 }
