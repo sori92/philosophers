@@ -6,7 +6,7 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/07 13:27:22 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/13 20:39:59 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/14 19:08:05 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,9 +51,13 @@ typedef struct s_manager
 	unsigned int	time_eat;
 	unsigned int	time_sleep;
 	unsigned int	goal_lunchs;
+	unsigned int	philo_satisfed;
 	unsigned int	dead;
+	unsigned int	start_program;
+	struct timeval	start_time;
 	pthread_mutex_t	printer;
 	pthread_mutex_t	*forks;
+	pthread_mutex_t	dead_mutex;
 	pthread_t		*threads;
 }	t_manager;
 
@@ -62,8 +66,10 @@ typedef struct s_philo
 	unsigned int	name;
 	unsigned int	r_hand;
 	unsigned int	l_hand;
+	unsigned int	lunch_count;
+	unsigned int	count_reached;
 	struct timeval	last_lunch;
-	struct timeval	start_time;
+	pthread_mutex_t	lunch_mutex;
 	t_manager		*manager;
 }	t_philo;
 
@@ -78,9 +84,9 @@ long			time_dif(struct timeval start_tv);
 unsigned int	ft_unsigned_atoi(const char *str);
 
 	//ERROR HANDLING
-void			perror_args(char *info);
-void			perror_alloc_create(int nerror, char *info);
-void			perror_destroy(int nerror, char *info);
+int			perror_args(char *info);
+int			perror_alloc_create(int nerror, char *info);
+int			perror_destroy(int nerror, char *info);
 
 	//TESTING FUNCTIONALITIES
 void			show_manager(t_manager manager);

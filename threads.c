@@ -6,7 +6,7 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/10 13:47:42 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/13 20:52:52 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/14 19:14:25 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,13 +22,15 @@
 */
 static void	init_philo_vars(t_philo *philo, t_manager manager)
 {
-	gettimeofday(&philo->start_time, NULL);
 	philo->l_hand = philo->name - 1;
 	if (philo->name == manager.n_philos)
 		philo->r_hand = 0;
 	else
 		philo->r_hand = philo->name;
-	philo->last_lunch = philo->start_time;
+	philo->lunch_count = 0;
+	pthread_mutex_lock(&philo->lunch_mutex);
+	philo->last_lunch = manager.start_time;
+	pthread_mutex_unlock(&philo->lunch_mutex);
 }
 
 /*
@@ -38,7 +40,7 @@ static void	init_philo_vars(t_philo *philo, t_manager manager)
 void	state_printer(const char *color, t_philo *philo, const char *str)
 {
 	pthread_mutex_lock(&philo->manager->printer);
-	printf("%s%ld %d %s\x1b[0m\n", color, time_dif(philo->start_time), philo->name, str);
+	printf("%s%ld %d %s\x1b[0m\n", color, time_dif(philo->manager->start_time), philo->name, str);
 	pthread_mutex_unlock(&philo->manager->printer);
 }
 
@@ -50,6 +52,9 @@ static int	usleep_precise(unsigned int time, t_manager *manager)
 {
 	unsigned int	elapsed_time;
 
+	printf("TIME: %u\n", time);
+	time = time * 1000;
+	printf("TIME2: %u\n", time);
 	elapsed_time = 0;
 	while (elapsed_time < time)
 	{
@@ -65,24 +70,54 @@ static int	usleep_precise(unsigned int time, t_manager *manager)
 }
 
 /*
+	This function checks if the thread has to finish because of deads,
+	and unlock the appropiate mutexes.
+*/
+static int check_dead(int left, int right, t_philo *philo, t_manager *manager)
+{
+	//pthread_mutex_lock(&manager->dead_mutex);
+	if (manager->dead != 0)
+	{
+		if (left)
+			pthread_mutex_unlock(&manager->forks[philo->l_hand]);
+		if (right)
+			pthread_mutex_unlock(&manager->forks[philo->r_hand]);
+		//pthread_mutex_unlock(&manager->dead_mutex);
+		return (0);
+	}
+	else
+		return (/* pthread_mutex_unlock(&manager->dead_mutex) ,*/ 1);
+}
+
+/*
     Takes the forks and eats during the 'time_eat'.
     Even takes left forks first, and odd begin with the right ones.
     If someone dies during the proccess manages to return.
 */
 static int	eat(t_philo *philo, t_manager *manager)
 {
+	if (manager->dead != 0)
+			return (0);
 	if (is_even(philo->name))
 	{
 		pthread_mutex_lock(&manager->forks[philo->l_hand]);
+		if (!check_dead(1, 0, philo, manager))
+			return (0);
 		state_printer(BG_YELLOW, philo, "has taken a fork");
 		pthread_mutex_lock(&manager->forks[philo->r_hand]);
+		if (!check_dead(1, 1, philo, manager))
+			return (0);
 		state_printer(BG_ORANGE, philo, "has taken a fork");
 	}
 	else
 	{
 		pthread_mutex_lock(&manager->forks[philo->r_hand]);
+		if (!check_dead(0, 1, philo, manager))
+			return (0);
 		state_printer(BG_ORANGE, philo, "has taken a fork");
 		pthread_mutex_lock(&manager->forks[philo->l_hand]);
+		if (!check_dead(1, 1, philo, manager))
+			return (0);
 		state_printer(BG_YELLOW, philo, "has taken a fork");
 	}
 	gettimeofday(&philo->last_lunch, NULL);
@@ -93,6 +128,12 @@ static int	eat(t_philo *philo, t_manager *manager)
 		pthread_mutex_unlock(&manager->forks[philo->r_hand]);
 		return (0);
 	}
+	philo->lunch_count += 1;
+	if (philo->lunch_count == manager->goal_lunchs && philo->count_reached == 0)
+	{
+			manager->philo_satisfed += 1;
+			philo->count_reached = 1;
+	}
 	pthread_mutex_unlock(&manager->forks[philo->l_hand]);
 	pthread_mutex_unlock(&manager->forks[philo->r_hand]);
 	return (1);
@@ -100,6 +141,8 @@ static int	eat(t_philo *philo, t_manager *manager)
 
 /*
     Main loop for the philo threads:
+	First of all, we set some general vars, and after that
+	we wait for the 'start_time' to trigger the real thread loop.
     It does eats and sleep, and manages to return if someone dies.
     Casting from a void is a mandatory from the 'pthread_create' function.
 */
@@ -111,6 +154,9 @@ void	*thread_loop(void *input)
 	philo = (t_philo *)input;
 	manager = philo->manager;
 	init_philo_vars(philo, *manager);
+/* while (!manager->start_program)
+	usleep(10);
+philo->last_lunch = manager->start_time; */
 	while (1)
 	{
 		if (!eat(philo, manager))
@@ -120,4 +166,5 @@ void	*thread_loop(void *input)
 			return (NULL);
 		state_printer(BG_CYAN, philo, "is thinking");
 	}
+	return (NULL);
 }

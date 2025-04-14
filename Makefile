@@ -6,13 +6,13 @@
 #    By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/01/08 13:22:45 by carlosg2          #+#    #+#              #
-#    Updated: 2025/04/10 19:47:27 by dsoriano         ###   ########.fr        #
+#    Updated: 2025/04/14 18:32:21 by dsoriano         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = philo
 
-CFLAGS = -Wall -Wextra -Werror -g3 -fsanitize=address
+CFLAGS = -Wall -Wextra -Werror -g3 -fsanitize=thread
 
 SRCS = philo.c error.c threads.c aux.c testing.c
 
