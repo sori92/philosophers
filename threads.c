@@ -6,7 +6,7 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/10 13:47:42 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/16 14:51:44 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/16 16:25:28 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,8 +39,10 @@ static void	init_philo_vars(t_philo *philo, t_manager manager)
 */
 void	state_printer(const char *color, t_philo *philo, const char *str)
 {
+	(void)color;
 	pthread_mutex_lock(&philo->manager->printer);
-	printf("%s%u %d %s\x1b[0m\n", color, time_dif(philo->manager->start_time), philo->name, str);
+	/* printf("%s%u %d %s\x1b[0m\n", color, time_dif(philo->manager->start_time), philo->name, str); */
+	printf("%u %d %s\n", time_dif(philo->manager->start_time), philo->name, str);
 	pthread_mutex_unlock(&philo->manager->printer);
 }
 
@@ -108,6 +110,16 @@ static int	eat(t_philo *philo, t_manager *manager)
 	{
 		pthread_mutex_lock(&manager->satisfied);
 		manager->philo_satisfied += 1;
+		if (manager->philo_satisfied == manager->n_philos)
+		{
+			pthread_mutex_lock(&manager->dead_mutex);
+			manager->dead = 1;
+			pthread_mutex_unlock(&manager->dead_mutex);
+			pthread_mutex_unlock(&manager->satisfied);
+			pthread_mutex_unlock(&manager->forks[philo->l_hand]);
+			pthread_mutex_unlock(&manager->forks[philo->r_hand]);
+			return (0);
+		}
 		pthread_mutex_unlock(&manager->satisfied);
 		philo->count_reached = 1;
 	}
@@ -134,6 +146,8 @@ void	*thread_loop(void *input)
 /* while (!manager->start_program)
 	usleep(10);
 philo->last_lunch = manager->start_time; */
+	if (is_even(philo->name))
+		usleep(10);
 	while (1)
 	{
 		if (!eat(philo, manager))

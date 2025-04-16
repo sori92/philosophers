@@ -6,7 +6,7 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/07 13:27:29 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/16 14:47:39 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/16 17:03:52 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,10 +23,12 @@ static int	parsing(int argc, char **argv, t_manager *manager)
 	manager->time_die = ft_unsigned_atoi(argv[2]);
 	manager->time_eat = ft_unsigned_atoi(argv[3]);
 	manager->time_sleep = ft_unsigned_atoi(argv[4]);
-	if (!manager->n_philos || !manager->n_philos || !manager->n_philos || !manager->n_philos)
+	if (!manager->n_philos || !manager->time_die || !manager->time_eat || !manager->time_sleep)
 		return (1);
 	if (argc == 6)
 		manager->goal_lunchs = ft_unsigned_atoi(argv[5]);
+	if (!manager->goal_lunchs)
+		return (1);
 	return (0);
 }
 
@@ -88,34 +90,34 @@ static void	parca_loop(t_manager *manager, t_philo **philo)
 
 	while (!manager->start_program)
 		usleep(10);
-	while (manager->dead == 0)
+	while (1)
 	{
-		i = 0;
-		while (i < manager->n_philos)
+		pthread_mutex_lock(&manager->dead_mutex);
+		if (manager->dead == 0)
 		{
-			pthread_mutex_lock(&philo[i]->lunch_mutex);
-			dif = time_dif(philo[i]->last_lunch);
-			pthread_mutex_unlock(&philo[i]->lunch_mutex);
-			if (dif > manager->time_die)
-			{
-				pthread_mutex_lock(&manager->dead_mutex);
-				manager->dead = 1;
-				pthread_mutex_unlock(&manager->dead_mutex);
-				state_printer(BG_RED, philo[i], "died");
-				break ;
-			}
-			i++;
-		}
-		pthread_mutex_lock(&manager->satisfied);
-		if (manager->philo_satisfied == manager->n_philos)
-		{
-			pthread_mutex_lock(&manager->dead_mutex);
-			manager->dead = 1;
 			pthread_mutex_unlock(&manager->dead_mutex);
-			pthread_mutex_unlock(&manager->satisfied);
+			i = 0;
+			while (i < manager->n_philos)
+			{
+				pthread_mutex_lock(&philo[i]->lunch_mutex);
+				dif = time_dif(philo[i]->last_lunch);
+				pthread_mutex_unlock(&philo[i]->lunch_mutex);
+				if (dif > manager->time_die)
+				{
+					pthread_mutex_lock(&manager->dead_mutex);
+					manager->dead = 1;
+					pthread_mutex_unlock(&manager->dead_mutex);
+					state_printer(BG_RED, philo[i], "died");
+					break ;
+				}
+				i++;
+			}
+		}
+		else
+		{
+			pthread_mutex_unlock(&manager->dead_mutex);
 			break ;
 		}
-		pthread_mutex_unlock(&manager->satisfied);
 	}
 }
 
