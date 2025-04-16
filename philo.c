@@ -6,7 +6,7 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/07 13:27:29 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/14 19:23:31 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/16 14:47:39 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,6 +69,9 @@ static int	clean_philo(t_manager *manager, t_philo **philo, int nerror, unsigned
 		i++;
     }
 	free(philo);
+	nerror = pthread_mutex_destroy(&manager->dead_mutex);
+	if (nerror)
+		return (perror_destroy(nerror, "destroy mutex error in dead"));
 	return (0);
 }
 
@@ -81,7 +84,7 @@ static int	clean_philo(t_manager *manager, t_philo **philo, int nerror, unsigned
 static void	parca_loop(t_manager *manager, t_philo **philo)
 {
 	unsigned int	i;
-	long			dif;
+	unsigned int	dif;
 
 	while (!manager->start_program)
 		usleep(10);
@@ -95,24 +98,31 @@ static void	parca_loop(t_manager *manager, t_philo **philo)
 			pthread_mutex_unlock(&philo[i]->lunch_mutex);
 			if (dif > manager->time_die)
 			{
-				printf("MUERTE POR QUE HA PASADO ESTE TIEMPO: %ld\n", dif);
-				//pthread_mutex_lock(&manager->dead_mutex);
+				pthread_mutex_lock(&manager->dead_mutex);
 				manager->dead = 1;
-				//pthread_mutex_unlock(&manager->dead_mutex);
+				pthread_mutex_unlock(&manager->dead_mutex);
 				state_printer(BG_RED, philo[i], "died");
 				break ;
 			}
 			i++;
 		}
-		if (manager->philo_satisfed == manager->n_philos)
-			break;
+		pthread_mutex_lock(&manager->satisfied);
+		if (manager->philo_satisfied == manager->n_philos)
+		{
+			pthread_mutex_lock(&manager->dead_mutex);
+			manager->dead = 1;
+			pthread_mutex_unlock(&manager->dead_mutex);
+			pthread_mutex_unlock(&manager->satisfied);
+			break ;
+		}
+		pthread_mutex_unlock(&manager->satisfied);
 	}
 }
 
 /*
     Initiating some basic main values:
     - Allocation of space for 'philo**', 'threads*' and 'forks*'.
-	- Creation of a 'mutex' for the prints.
+	- Creation of a 'mutex' for the prints, and another for 'dead' bool.
 	- Setting the 'dead' to 0.
 */
 static int	init_main_vars(t_manager *manager, t_philo ***philo, int nerror)
@@ -129,7 +139,13 @@ static int	init_main_vars(t_manager *manager, t_philo ***philo, int nerror)
 	nerror = pthread_mutex_init(&manager->printer, NULL);
 	if (nerror)
 		return (perror_alloc_create(nerror, "init mutex error in printer"));
-	manager->philo_satisfed = 0;
+	nerror = pthread_mutex_init(&manager->dead_mutex, NULL);
+	if (nerror)
+		return (perror_alloc_create(nerror, "init mutex error in dead_mutex"));
+	nerror = pthread_mutex_init(&manager->satisfied, NULL);
+	if (nerror)
+		return (perror_alloc_create(nerror, "init mutex error in satisfied"));	
+	manager->philo_satisfied = 0;
 	manager->dead = 0;
 	manager->start_program = 0;
 	return (0);
@@ -138,7 +154,8 @@ static int	init_main_vars(t_manager *manager, t_philo ***philo, int nerror)
 /*
 	Main functioning:
 	- Parsing the arguments and setting the values for the program.
-	- Generating all the philo 'threads' and the fork´s 'mutex'.
+	- Generating all the fork´s 'mutex' and the basic staff for 'philo' structs.
+	- Generating all the 'threads'.
 	- Creating the 'parca' that checks if someone hast to die.
 	- Cleaning and closing the program when every 'thread' is done.
 */
@@ -175,8 +192,6 @@ int	main(int argc, char **argv)
 			return (perror_alloc_create(nerror, "thread creation error"));
 		i++;
 	}
-	usleep(1000000);
-	//gettimeofday(&manager.start_time, NULL);
 	manager.start_program = 1;
 	parca_loop(&manager, philo);
 	if ((nerror = clean_philo(&manager, philo, 0, 0)))

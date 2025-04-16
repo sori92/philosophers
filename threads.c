@@ -6,7 +6,7 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/10 13:47:42 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/14 19:14:25 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/16 14:51:44 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,53 +40,28 @@ static void	init_philo_vars(t_philo *philo, t_manager manager)
 void	state_printer(const char *color, t_philo *philo, const char *str)
 {
 	pthread_mutex_lock(&philo->manager->printer);
-	printf("%s%ld %d %s\x1b[0m\n", color, time_dif(philo->manager->start_time), philo->name, str);
+	printf("%s%u %d %s\x1b[0m\n", color, time_dif(philo->manager->start_time), philo->name, str);
 	pthread_mutex_unlock(&philo->manager->printer);
 }
 
 /*
-    Make 'usleep' during the given time,
-    but checking if someone is dead every 10 milisecs
-*/
-static int	usleep_precise(unsigned int time, t_manager *manager)
-{
-	unsigned int	elapsed_time;
-
-	printf("TIME: %u\n", time);
-	time = time * 1000;
-	printf("TIME2: %u\n", time);
-	elapsed_time = 0;
-	while (elapsed_time < time)
-	{
-		if (time - elapsed_time < 10)
-			usleep(time - elapsed_time);
-		else
-			usleep(10);
-		elapsed_time += 10;
-		if (manager->dead != 0)
-			return (0);
-	}
-	return (1);
-}
-
-/*
 	This function checks if the thread has to finish because of deads,
-	and unlock the appropiate mutexes.
+	and unlock the reserved mutexes if passed as argumments.
 */
-static int check_dead(int left, int right, t_philo *philo, t_manager *manager)
+int check_dead(pthread_mutex_t *mutex0, pthread_mutex_t *mutex1, t_manager *manager)
 {
-	//pthread_mutex_lock(&manager->dead_mutex);
+	pthread_mutex_lock(&manager->dead_mutex);
 	if (manager->dead != 0)
 	{
-		if (left)
-			pthread_mutex_unlock(&manager->forks[philo->l_hand]);
-		if (right)
-			pthread_mutex_unlock(&manager->forks[philo->r_hand]);
-		//pthread_mutex_unlock(&manager->dead_mutex);
+		if (mutex0)
+			pthread_mutex_unlock(mutex0);
+		if (mutex1)
+			pthread_mutex_unlock(mutex1);
+		pthread_mutex_unlock(&manager->dead_mutex);
 		return (0);
 	}
 	else
-		return (/* pthread_mutex_unlock(&manager->dead_mutex) ,*/ 1);
+		return (pthread_mutex_unlock(&manager->dead_mutex) , 1);
 }
 
 /*
@@ -96,27 +71,27 @@ static int check_dead(int left, int right, t_philo *philo, t_manager *manager)
 */
 static int	eat(t_philo *philo, t_manager *manager)
 {
-	if (manager->dead != 0)
-			return (0);
+	if (!check_dead(NULL, NULL, manager))
+		return (0);
 	if (is_even(philo->name))
 	{
 		pthread_mutex_lock(&manager->forks[philo->l_hand]);
-		if (!check_dead(1, 0, philo, manager))
+		if (!check_dead(&manager->forks[philo->l_hand], NULL, manager))
 			return (0);
 		state_printer(BG_YELLOW, philo, "has taken a fork");
 		pthread_mutex_lock(&manager->forks[philo->r_hand]);
-		if (!check_dead(1, 1, philo, manager))
+		if (!check_dead(&manager->forks[philo->l_hand], &manager->forks[philo->r_hand], manager))
 			return (0);
 		state_printer(BG_ORANGE, philo, "has taken a fork");
 	}
 	else
 	{
 		pthread_mutex_lock(&manager->forks[philo->r_hand]);
-		if (!check_dead(0, 1, philo, manager))
+		if (!check_dead(NULL, &manager->forks[philo->r_hand], manager))
 			return (0);
 		state_printer(BG_ORANGE, philo, "has taken a fork");
 		pthread_mutex_lock(&manager->forks[philo->l_hand]);
-		if (!check_dead(1, 1, philo, manager))
+		if (!check_dead(&manager->forks[philo->l_hand], &manager->forks[philo->r_hand], manager))
 			return (0);
 		state_printer(BG_YELLOW, philo, "has taken a fork");
 	}
@@ -131,8 +106,10 @@ static int	eat(t_philo *philo, t_manager *manager)
 	philo->lunch_count += 1;
 	if (philo->lunch_count == manager->goal_lunchs && philo->count_reached == 0)
 	{
-			manager->philo_satisfed += 1;
-			philo->count_reached = 1;
+		pthread_mutex_lock(&manager->satisfied);
+		manager->philo_satisfied += 1;
+		pthread_mutex_unlock(&manager->satisfied);
+		philo->count_reached = 1;
 	}
 	pthread_mutex_unlock(&manager->forks[philo->l_hand]);
 	pthread_mutex_unlock(&manager->forks[philo->r_hand]);

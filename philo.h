@@ -6,7 +6,7 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/07 13:27:22 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/14 19:08:05 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/16 14:41:10 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,13 +51,14 @@ typedef struct s_manager
 	unsigned int	time_eat;
 	unsigned int	time_sleep;
 	unsigned int	goal_lunchs;
-	unsigned int	philo_satisfed;
+	unsigned int	philo_satisfied;
 	unsigned int	dead;
 	unsigned int	start_program;
 	struct timeval	start_time;
 	pthread_mutex_t	printer;
 	pthread_mutex_t	*forks;
 	pthread_mutex_t	dead_mutex;
+	pthread_mutex_t	satisfied;
 	pthread_t		*threads;
 }	t_manager;
 
@@ -77,10 +78,13 @@ typedef struct s_philo
 void			*thread_loop(void *input);
 void			state_printer(const char *color,
 					t_philo *philo, const char *str);
+int check_dead(pthread_mutex_t *mutex0, pthread_mutex_t *mutex1, t_manager *manager);
 
 	//AUXILIARS
 int				is_even(unsigned int name);
-long			time_dif(struct timeval start_tv);
+int				usleep_precise(unsigned long time, t_manager *manager);
+unsigned long	my_get_time_stamp();
+unsigned int	time_dif(struct timeval start_tv);
 unsigned int	ft_unsigned_atoi(const char *str);
 
 	//ERROR HANDLING
