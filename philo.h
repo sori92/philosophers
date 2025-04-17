@@ -6,7 +6,7 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/07 13:27:22 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/16 14:41:10 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/17 14:23:47 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,8 +53,6 @@ typedef struct s_manager
 	unsigned int	goal_lunchs;
 	unsigned int	philo_satisfied;
 	unsigned int	dead;
-	unsigned int	start_program;
-	struct timeval	start_time;
 	pthread_mutex_t	printer;
 	pthread_mutex_t	*forks;
 	pthread_mutex_t	dead_mutex;
@@ -67,6 +65,8 @@ typedef struct s_philo
 	unsigned int	name;
 	unsigned int	r_hand;
 	unsigned int	l_hand;
+	unsigned int	die_time;
+	struct timeval	start_time;
 	unsigned int	lunch_count;
 	unsigned int	count_reached;
 	struct timeval	last_lunch;
@@ -78,19 +78,27 @@ typedef struct s_philo
 void			*thread_loop(void *input);
 void			state_printer(const char *color,
 					t_philo *philo, const char *str);
-int check_dead(pthread_mutex_t *mutex0, pthread_mutex_t *mutex1, t_manager *manager);
+int				check_dead(pthread_mutex_t *mutex0,
+					pthread_mutex_t *mutex1, t_manager *manager);
+
+	//EAT LOOP
+int				eat(t_philo *philo, t_manager *manager);
 
 	//AUXILIARS
 int				is_even(unsigned int name);
 int				usleep_precise(unsigned long time, t_manager *manager);
-unsigned long	my_get_time_stamp();
+unsigned long	my_get_time_stamp(void);
 unsigned int	time_dif(struct timeval start_tv);
 unsigned int	ft_unsigned_atoi(const char *str);
 
-	//ERROR HANDLING
-int			perror_args(char *info);
-int			perror_alloc_create(int nerror, char *info);
-int			perror_destroy(int nerror, char *info);
+	//ERROR HANDLING AND PARSING
+int				parsing(int argc, char **argv, t_manager *manager);
+int				perror_args(char *info);
+int				perror_alloc_create(int nerror, char *info);
+int				perror_destroy(int nerror, char *info);
+
+	//DEAD FUNCTIONALITIES
+void			parca_loop(t_manager *manager, t_philo **philo);
 
 	//TESTING FUNCTIONALITIES
 void			show_manager(t_manager manager);

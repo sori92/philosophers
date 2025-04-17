@@ -6,50 +6,18 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/07 13:27:29 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/16 17:03:52 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/17 14:23:34 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 
 /*
-	Ensuring the viability of the arguments and setting the general values
+	Destryoing all the mutex, and cleaning allocations.
 */
-static int	parsing(int argc, char **argv, t_manager *manager)
+static int	clean_mutexes(t_manager *manager, t_philo **philo,
+				int nerror, unsigned int i)
 {
-	if (argc < 5 || argc > 6)
-		return (perror_args("incorrect ammount of arguments"));
-	manager->n_philos = ft_unsigned_atoi(argv[1]);
-	manager->time_die = ft_unsigned_atoi(argv[2]);
-	manager->time_eat = ft_unsigned_atoi(argv[3]);
-	manager->time_sleep = ft_unsigned_atoi(argv[4]);
-	if (!manager->n_philos || !manager->time_die || !manager->time_eat || !manager->time_sleep)
-		return (1);
-	if (argc == 6)
-		manager->goal_lunchs = ft_unsigned_atoi(argv[5]);
-	if (!manager->goal_lunchs)
-		return (1);
-	return (0);
-}
-
-/*
-	Destryoing all the mutex and threads and cleaning allocations,
-	before closing the program.
-*/
-static int	clean_philo(t_manager *manager, t_philo **philo, int nerror, unsigned int i)
-{
-	while (i < manager->n_philos)
-	{
-		if (manager->threads[i])
-		{
-			nerror = pthread_join(manager->threads[i], NULL);
-			if (nerror)
-				return (perror_destroy(nerror, "join error in threads"));
-		}
-		i++;
-	}
-	free(manager->threads);
-	i = 0;
 	while (i < manager->n_philos)
 	{
 		if (manager->forks)
@@ -66,10 +34,10 @@ static int	clean_philo(t_manager *manager, t_philo **philo, int nerror, unsigned
 		return (perror_destroy(nerror, "destroy mutex error in printer"));
 	i = 0;
 	while (i < manager->n_philos)
-    {
+	{
 		free(philo[i]);
 		i++;
-    }
+	}
 	free(philo);
 	nerror = pthread_mutex_destroy(&manager->dead_mutex);
 	if (nerror)
@@ -78,47 +46,52 @@ static int	clean_philo(t_manager *manager, t_philo **philo, int nerror, unsigned
 }
 
 /*
-	Loop that is always checking if someone has to die from starvation.
-	The moment that´s considered for starting the starvation
-	is the moment of starting to eat (yes, I know it has no much sense,
-	but that´s how it´s supposed to work).
+	Destryoing all the threads, then calling clean_mutexes.
 */
-static void	parca_loop(t_manager *manager, t_philo **philo)
+static int	clean_program(t_manager *manager, t_philo **philo, int nerror)
 {
 	unsigned int	i;
-	unsigned int	dif;
 
-	while (!manager->start_program)
-		usleep(10);
-	while (1)
+	i = 0;
+	while (i < manager->n_philos)
 	{
-		pthread_mutex_lock(&manager->dead_mutex);
-		if (manager->dead == 0)
+		if (manager->threads[i])
 		{
-			pthread_mutex_unlock(&manager->dead_mutex);
-			i = 0;
-			while (i < manager->n_philos)
-			{
-				pthread_mutex_lock(&philo[i]->lunch_mutex);
-				dif = time_dif(philo[i]->last_lunch);
-				pthread_mutex_unlock(&philo[i]->lunch_mutex);
-				if (dif > manager->time_die)
-				{
-					pthread_mutex_lock(&manager->dead_mutex);
-					manager->dead = 1;
-					pthread_mutex_unlock(&manager->dead_mutex);
-					state_printer(BG_RED, philo[i], "died");
-					break ;
-				}
-				i++;
-			}
+			nerror = pthread_join(manager->threads[i], NULL);
+			if (nerror)
+				return (perror_destroy(nerror, "join error in threads"));
 		}
-		else
-		{
-			pthread_mutex_unlock(&manager->dead_mutex);
-			break ;
-		}
+		i++;
 	}
+	free(manager->threads);
+	nerror = clean_mutexes(manager, philo, nerror, 0);
+	if (nerror)
+		return (nerror);
+	return (0);
+}
+
+/*
+	Create the 't_philo' struct for each philosoopher.
+*/
+static int	create_philos(t_philo **philo, t_manager *manager)
+{
+	unsigned int	i;
+	int				nerror;
+
+	i = 0;
+	while (i < manager->n_philos)
+	{
+		nerror = pthread_mutex_init(&manager->forks[i], NULL);
+		if (nerror)
+			return (perror_alloc_create(nerror, "init mutex error in forks"));
+		philo[i] = malloc(sizeof(t_philo));
+		if (!philo[i])
+			return (perror_alloc_create(0, "allocation issue in philo[i]"));
+		philo[i]->name = i + 1;
+		philo[i]->manager = manager;
+		i++;
+	}
+	return (0);
 }
 
 /*
@@ -131,10 +104,10 @@ static int	init_main_vars(t_manager *manager, t_philo ***philo, int nerror)
 {
 	*philo = malloc(sizeof(t_philo *) * manager->n_philos);
 	if (!(*philo))
-		return (perror_alloc_create(0, "allocation issue in pthread_t philo"));
+		return (perror_alloc_create(0, "allocation issue in philo"));
 	manager->threads = malloc(sizeof(pthread_t) * manager->n_philos);
 	if (!manager->threads)
-		return (perror_alloc_create(0, "allocation issue in pthread_t threads"));
+		return (perror_alloc_create(0, "allocation issue in threads"));
 	manager->forks = malloc(sizeof(pthread_mutex_t) * manager->n_philos);
 	if (!manager->forks)
 		return (perror_alloc_create(0, "allocation issue in forks"));
@@ -146,10 +119,9 @@ static int	init_main_vars(t_manager *manager, t_philo ***philo, int nerror)
 		return (perror_alloc_create(nerror, "init mutex error in dead_mutex"));
 	nerror = pthread_mutex_init(&manager->satisfied, NULL);
 	if (nerror)
-		return (perror_alloc_create(nerror, "init mutex error in satisfied"));	
+		return (perror_alloc_create(nerror, "init mutex error in satisfied"));
 	manager->philo_satisfied = 0;
 	manager->dead = 0;
-	manager->start_program = 0;
 	return (0);
 }
 
@@ -168,35 +140,24 @@ int	main(int argc, char **argv)
 	t_manager		manager;
 	t_philo			**philo;
 
-	if ((nerror = parsing(argc, argv, &manager)))
+	nerror = parsing(argc, argv, &manager);
+	if (nerror)
 		return (nerror);
-	if ((nerror = init_main_vars(&manager, &philo, 0)))
+	nerror = init_main_vars(&manager, &philo, 0);
+	if (nerror)
 		return (nerror);
-	gettimeofday(&manager.start_time, NULL);
+	nerror = create_philos(philo, &manager);
+	if (nerror)
+		return (nerror);
 	i = 0;
 	while (i < manager.n_philos)
 	{
-		nerror = pthread_mutex_init(&manager.forks[i], NULL);
-		if (nerror)
-			return (perror_alloc_create(nerror, "init mutex error in forks"));
-		philo[i] = malloc(sizeof(t_philo));
-		if (!philo[i])
-			return (perror_alloc_create(0, "allocation issue in pthread_t *philo"));
-		philo[i]->name = i + 1;
-		philo[i]->manager = &manager;
-		i++;
-	}
-	i = 0;
-	while (i < manager.n_philos)
-	{
-		nerror = pthread_create(&manager.threads[i], NULL, &thread_loop, philo[i]);
+		nerror = pthread_create(&manager.threads[i],
+				NULL, &thread_loop, philo[i]);
 		if (nerror)
 			return (perror_alloc_create(nerror, "thread creation error"));
 		i++;
 	}
-	manager.start_program = 1;
 	parca_loop(&manager, philo);
-	if ((nerror = clean_philo(&manager, philo, 0, 0)))
-		return (nerror);
-	return (0);
+	return (clean_program(&manager, philo, 0));
 }

@@ -6,7 +6,7 @@
 #    By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/01/08 13:22:45 by carlosg2          #+#    #+#              #
-#    Updated: 2025/04/14 18:32:21 by dsoriano         ###   ########.fr        #
+#    Updated: 2025/04/17 13:40:31 by dsoriano         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -14,7 +14,7 @@ NAME = philo
 
 CFLAGS = -Wall -Wextra -Werror -g3 -fsanitize=thread
 
-SRCS = philo.c error.c threads.c aux.c testing.c
+SRCS = philo.c error_parse.c threads.c eat.c aux.c time_manage.c parca.c testing.c
 
 OBJS = $(SRCS:.c=.o)
 
