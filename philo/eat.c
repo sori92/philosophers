@@ -6,7 +6,7 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/17 13:37:26 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/17 13:38:52 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/18 13:23:04 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,9 @@ static void	set_dead(t_philo philo, t_manager *manager)
 */
 static int	eat_aux(t_philo *philo, t_manager *manager)
 {
+	pthread_mutex_lock(&philo->lunch_mutex);
 	gettimeofday(&philo->last_lunch, NULL);
+	pthread_mutex_unlock(&philo->lunch_mutex);
 	state_printer(BG_BROWN, philo, "is eating");
 	if (!usleep_precise(manager->time_eat, manager))
 	{
