@@ -6,7 +6,7 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/07 13:27:22 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/17 14:23:47 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/18 11:34:47 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,11 +84,13 @@ int				check_dead(pthread_mutex_t *mutex0,
 	//EAT LOOP
 int				eat(t_philo *philo, t_manager *manager);
 
-	//AUXILIARS
-int				is_even(unsigned int name);
+	//TIME MANAGEMENT
 int				usleep_precise(unsigned long time, t_manager *manager);
 unsigned long	my_get_time_stamp(void);
 unsigned int	time_dif(struct timeval start_tv);
+
+	//AUXILIARS
+int				is_even(unsigned int name);
 unsigned int	ft_unsigned_atoi(const char *str);
 
 	//ERROR HANDLING AND PARSING
@@ -99,9 +101,5 @@ int				perror_destroy(int nerror, char *info);
 
 	//DEAD FUNCTIONALITIES
 void			parca_loop(t_manager *manager, t_philo **philo);
-
-	//TESTING FUNCTIONALITIES
-void			show_manager(t_manager manager);
-void			show_philo(t_philo philo);
 
 #endif
