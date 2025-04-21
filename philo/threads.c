@@ -6,7 +6,7 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/10 13:47:42 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/18 13:28:48 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/21 22:47:30 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,8 @@
 
 /*
     Printing name and state of the philo at the current momment,
-    according to the selected color.
+    according to the selected color. Using printf is really slow,
+	so we use write but the way to custom the sentence is quite complex.
 */
 void	state_printer(const char *color, t_philo *philo, const char *str)
 {
@@ -41,7 +42,10 @@ int	check_dead(pthread_mutex_t *mut0, pthread_mutex_t *mut1, t_manager *manager)
 		return (0);
 	}
 	else
-		return (pthread_mutex_unlock(&manager->dead_mutex), 1);
+	{
+		pthread_mutex_unlock(&manager->dead_mutex);
+		return (1);
+	}
 }
 
 /*
@@ -62,6 +66,7 @@ static void	init_philo_vars(t_philo *philo, t_manager manager)
 	philo->lunch_count = 0;
 	philo->die_time = manager.time_die;
 	philo->count_reached = 0;
+	pthread_mutex_init(&philo->lunch_mutex, NULL);
 	pthread_mutex_lock(&philo->lunch_mutex);
 	gettimeofday(&philo->start_time, NULL);
 	philo->last_lunch = philo->start_time;
@@ -79,12 +84,13 @@ void	*thread_loop(void *input)
 {
 	t_philo		*philo;
 	t_manager	*manager;
+	int			nerror;
 
 	philo = (t_philo *)input;
 	manager = philo->manager;
 	init_philo_vars(philo, *manager);
 	if (is_even(philo->name))
-		usleep(10);
+		usleep(1000);
 	while (1)
 	{
 		if (!check_dead(NULL, NULL, manager))
@@ -96,5 +102,8 @@ void	*thread_loop(void *input)
 			return (NULL);
 		state_printer(BG_CYAN, philo, "is thinking");
 	}
+	nerror = pthread_mutex_destroy(&philo->lunch_mutex);
+	if (nerror)
+		perror_destroy(nerror, "destroy mutex error in lunch_mutex");
 	return (NULL);
 }

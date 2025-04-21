@@ -6,7 +6,7 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/17 13:29:37 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/18 13:30:14 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/21 22:48:03 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@ void	parca_loop(t_manager *manager, t_philo **philo)
 	unsigned int	dif;
 	unsigned int	i;
 
+	usleep(10000);
 	while (1)
 	{
 		pthread_mutex_lock(&manager->dead_mutex);

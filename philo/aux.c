@@ -6,11 +6,38 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/10 19:45:18 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/17 13:39:50 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/21 19:35:56 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
+
+unsigned int	ft_unsigned_itoa(unsigned int n, char *str)
+{
+	unsigned int	len;
+	unsigned int	temp;
+
+	if (n == 0)
+	{
+		str[0] = '0';
+		str[1] = '\0';
+		return (1);
+	}
+	len = 0;
+	temp = n;
+	while (temp)
+	{
+		temp = temp / 10;
+		len++;
+	}
+	str[len] = '0';
+	while (n)
+	{
+		str[--len] = (n % 10) + '0';
+		n = n / 10;
+	}
+	return (len + 1);
+}
 
 unsigned int	ft_unsigned_atoi(const char *str)
 {

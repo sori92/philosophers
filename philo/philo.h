@@ -6,7 +6,7 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/07 13:27:22 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/18 11:34:47 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/21 19:29:04 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,6 +92,7 @@ unsigned int	time_dif(struct timeval start_tv);
 	//AUXILIARS
 int				is_even(unsigned int name);
 unsigned int	ft_unsigned_atoi(const char *str);
+unsigned int	ft_unsigned_itoa(unsigned int n, char *str);
 
 	//ERROR HANDLING AND PARSING
 int				parsing(int argc, char **argv, t_manager *manager);

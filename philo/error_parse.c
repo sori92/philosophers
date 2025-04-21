@@ -6,7 +6,7 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/07 13:45:37 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/18 11:39:40 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/21 22:47:08 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,9 +27,13 @@ int	parsing(int argc, char **argv, t_manager *manager)
 		|| !manager->time_eat || !manager->time_sleep)
 		return (1);
 	if (argc == 6)
+	{
 		manager->goal_lunchs = ft_unsigned_atoi(argv[5]);
-	if (!manager->goal_lunchs)
-		return (1);
+		if (!manager->goal_lunchs)
+			return (1);
+	}
+	else
+		manager->goal_lunchs = 0;
 	return (0);
 }
 
