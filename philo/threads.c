@@ -6,7 +6,7 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/10 13:47:42 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/21 22:47:30 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/21 23:49:09 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,9 +19,13 @@
 */
 void	state_printer(const char *color, t_philo *philo, const char *str)
 {
+	unsigned int	time;
+	int				name;
+
 	pthread_mutex_lock(&philo->manager->printer);
-	printf("%s%u %d %s\x1b[0m\n", color,
-		time_dif(philo->start_time), philo->name, str);
+	time = time_dif(philo->start_time);
+	name = philo->name;
+	printf("%s%u %d %s\x1b[0m\n", color, time, name, str);
 	pthread_mutex_unlock(&philo->manager->printer);
 }
 
@@ -55,21 +59,24 @@ int	check_dead(pthread_mutex_t *mut0, pthread_mutex_t *mut1, t_manager *manager)
     (forks start in 0 and names start in 1).
     - The right hand has the fork of philo name,
     except for the last philo, who has the fork 0.
+	(The strange mutex of printer is to avoid any data race
+	if the parca gets to 'start_time' faster)
 */
-static void	init_philo_vars(t_philo *philo, t_manager manager)
+static void	init_philo_vars(t_philo *philo, t_manager *manager)
 {
 	philo->l_hand = philo->name - 1;
-	if (philo->name == manager.n_philos)
+	if (philo->name == manager->n_philos)
 		philo->r_hand = 0;
 	else
 		philo->r_hand = philo->name;
 	philo->lunch_count = 0;
-	philo->die_time = manager.time_die;
 	philo->count_reached = 0;
 	pthread_mutex_init(&philo->lunch_mutex, NULL);
 	pthread_mutex_lock(&philo->lunch_mutex);
+	pthread_mutex_lock(&manager->printer);
 	gettimeofday(&philo->start_time, NULL);
 	philo->last_lunch = philo->start_time;
+	pthread_mutex_unlock(&manager->printer);
 	pthread_mutex_unlock(&philo->lunch_mutex);
 }
 
@@ -88,7 +95,7 @@ void	*thread_loop(void *input)
 
 	philo = (t_philo *)input;
 	manager = philo->manager;
-	init_philo_vars(philo, *manager);
+	init_philo_vars(philo, manager);
 	if (is_even(philo->name))
 		usleep(1000);
 	while (1)

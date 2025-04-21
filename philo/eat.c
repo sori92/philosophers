@@ -6,7 +6,7 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/17 13:37:26 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/21 22:45:06 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/21 22:53:46 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,8 @@ static int	eat_aux(t_philo *philo, t_manager *manager)
 	if (!usleep_precise(manager->time_eat, manager))
 	{
 		pthread_mutex_unlock(&manager->forks[philo->l_hand]);
-		return (pthread_mutex_unlock(&manager->forks[philo->r_hand]), 0);
+		pthread_mutex_unlock(&manager->forks[philo->r_hand]);
+		return (0);
 	}
 	philo->lunch_count++;
 	if ((philo->lunch_count == manager->goal_lunchs

@@ -6,7 +6,7 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/17 13:29:37 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/21 22:48:03 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/21 23:09:51 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ void	parca_loop(t_manager *manager, t_philo **philo)
 				pthread_mutex_lock(&philo[i]->lunch_mutex);
 				dif = time_dif(philo[i]->last_lunch);
 				pthread_mutex_unlock(&philo[i]->lunch_mutex);
-				if (dif > philo[i]->die_time)
+				if (dif > manager->time_die)
 					return (set_dead(manager, philo, i));
 				i++;
 			}

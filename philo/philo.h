@@ -6,7 +6,7 @@
 /*   By: dsoriano <dsoriano@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/07 13:27:22 by dsoriano          #+#    #+#             */
-/*   Updated: 2025/04/21 19:29:04 by dsoriano         ###   ########.fr       */
+/*   Updated: 2025/04/21 23:10:03 by dsoriano         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,7 +65,6 @@ typedef struct s_philo
 	unsigned int	name;
 	unsigned int	r_hand;
 	unsigned int	l_hand;
-	unsigned int	die_time;
 	struct timeval	start_time;
 	unsigned int	lunch_count;
 	unsigned int	count_reached;
